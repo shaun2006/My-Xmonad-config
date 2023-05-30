@@ -270,8 +270,8 @@ myStartupHook = do
 main = do
 
 --------------------------------------- xmobar------------------------------------------
-    xmpeoc0 <- spawnPipe "$HOME/.local/bin/xmobarbk -x 0 $HOME/.config/xmobar/xmobarrc1"
---    xmpeoc0 <- spawnPipe "xmobar -x 0 /home/shaun/.config/xmobar/xmobarrc"
+--    xmpeoc0 <- spawnPipe "$HOME/.local/bin/xmobarbk -x 0 $HOME/.config/xmobar/xmobarrc1"
+    xmpeoc0 <- spawnPipe "xmobar -x 0 /home/shaun/.config/xmobar/xmobarrc"
 --  xmpeoc1 <- spawnPipe "xmobar -x 1 $HOME/.config/xmobar/xmobarrc1"
 --------------------------------------- xmobar-------------------------------------------
 
