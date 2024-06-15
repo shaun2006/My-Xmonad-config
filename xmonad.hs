@@ -1,4 +1,4 @@
--- xmonad config file for Gentoo
+-- xmonad config 
 -- In haskell '--' Means comment
 
 ---------------------------------------------------imports--------------------------------------------------
@@ -34,6 +34,9 @@ import XMonad.Hooks.StatusBar.PP
 import XMonad.Hooks.StatusBar.WorkspaceScreen
 import Control.Monad (liftM2)
 import XMonad.Util.ClickableWorkspaces
+import XMonad.Actions.Minimize
+import XMonad.Layout.Minimize
+import qualified XMonad.Layout.BoringWindows as BW
 ---------------------------------------------------imports--------------------------------------------------
 
 
@@ -99,6 +102,8 @@ myKeys1 =
         , ("M-n", refresh) -- Resize viewed windows to the correct size
         , ("M-p", spawn "dmenu_run") -- launch dmenu
         , ("M-t", withFocused $ windows . W.sink) -- Push window back into tiling
+        , ("M-S-m", withLastMinimized maximizeWindow )--maximize focused window
+        , ("M-C-m", withFocused minimizeWindow) --minimize focused window
 
 --        , ("M-S-a", spawn "feh --bg-scale ~/Pictures/Wallpapers/Trisquel_GNU+Linux_10.0_Etiona_spanish.png && killall xmobarbk") -- sets fake wallpaper        
         , ("M-S-c", spawn "feh --randomize --bg-scale ~/Pictures/Wallpapers/*") -- Change wallpaperr
@@ -306,7 +311,7 @@ defaults = def {
         mouseBindings      = myMouseBindings,
 
       -- hooks, layouts
-        layoutHook         = myLayout,
+        layoutHook         = minimize . BW.boringWindows $ myLayout,
         manageHook         = myManageHook,
 --        handleEventHook    = fullscreenEventHook,
        -- logHook            = myLogHook,
