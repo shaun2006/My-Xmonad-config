@@ -64,13 +64,9 @@ myWorkspaces = ["main ", " www ", " shells ", " docs ", " kvm's ", " sessions ",
 myExtraWorkspaces = [(xK_0, " pdf "), (xK_minus, " hacking "), (xK_equal, " aws "), (xK_q, " azure "), (xK_a, " extra1 ")] -- extra workspaces
 myWorkspaceIndices = M.fromList $ zip myWorkspaces [1..] -- (,) == \x y -> (x,y)
 ---------------------------------------------------------------------------------------------------worskapces------------------------------------------------------------
+--note:- install xdotool for clickable workspaces
 -- Make xmobar workspaces clickable
 --myWorkspaces = clickable . (map xmobarEscape) $ map show [1..9]
-
-
-
-
-
 
 
 ------------------------------------------------------------------------
