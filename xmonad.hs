@@ -258,10 +258,6 @@ myStartupHook = do
             spawnOnce "ibus-daemon -d &"
             spawnOnce "dunst &"
             spawnOnce "mpv -no-video ~/Music/bootsound/boot-sound.wav &"
---            spawnOnce "sleep 2s; killall lxappearance &"
---            spawnOnce "rclone mount --daemon gdrive3: /home/shaun/online_drives/google/gdrive3/ &"
---            spawnOnce "rclone mount --daemon gdrive1: /home/shaun/online_drives/google/gdrive1/ &"
---            spawnOnce "rclone mount --daemon gdrive2: /home/shaun/online_drives/google/gdrive2/ &"
 -------------------------------------------------------------------------------------------------------------
 
 
@@ -272,7 +268,7 @@ main = do
 
 --------------------------------------- xmobar------------------------------------------
 --    xmpeoc0 <- spawnPipe "$HOME/.local/bin/xmobarbk -x 0 $HOME/.config/xmobar/xmobarrc1"
-    xmpeoc0 <- spawnPipe "xmobar -x 0 /home/shaun/.config/xmobar/xmobarrc"
+    xmpeoc0 <- spawnPipe "xmobar -x 0 ~/.config/xmobar/xmobarrc"
 --  xmpeoc1 <- spawnPipe "xmobar -x 1 $HOME/.config/xmobar/xmobarrc1"
 --------------------------------------- xmobar-------------------------------------------
 
