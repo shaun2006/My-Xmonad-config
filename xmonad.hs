@@ -1,6 +1,5 @@
--- xmonad config 
+-- xmonad config file for Gentoo
 -- In haskell '--' Means comment
-
 ---------------------------------------------------imports--------------------------------------------------
 import XMonad
 import Data.Monoid
@@ -22,6 +21,7 @@ import XMonad.Util.EZConfig
 import XMonad.Actions.WithAll (sinkAll, killAll)
 import XMonad.Actions.CopyWindow(copy)
 import qualified XMonad.Actions.DynamicWorkspaces as DW
+import XMonad.Actions.WorkspaceNames
 import System.IO (hPutStrLn)
 import XMonad.Actions.CycleWS (Direction1D(..), moveTo, shiftTo, WSType(..), nextScreen, prevScreen)
 import XMonad.Actions.SpawnOn
@@ -37,11 +37,12 @@ import XMonad.Util.ClickableWorkspaces
 import XMonad.Actions.Minimize
 import XMonad.Layout.Minimize
 import qualified XMonad.Layout.BoringWindows as BW
+import Graphics.X11.ExtraTypes.XF86
+import XMonad.Util.Cursor
+import XMonad.Config.Gnome
 ---------------------------------------------------imports--------------------------------------------------
-
-
 ---------------------------------------------------setup up stuff--------------------------------------------------
-myTerminal = "alacritty"
+myTerminal = "kitty"
 
 myFocusFollowsMouse :: Bool
 myFocusFollowsMouse = True
@@ -56,19 +57,18 @@ myModMask       = mod4Mask
 myNormalBorderColor  = "#282c34" 
 myFocusedBorderColor = "#46d9ff"
 ---------------------------------------------------steup up stuff--------------------------------------------------
-
 ---------------------------------------------------------------------------------------------worskapces-----------------------------------------------------------------
 windowCount :: X (Maybe String) -- get the number of window open in a workspace
 windowCount = gets $ Just . show . length . W.integrate' . W.stack . W.workspace . W.current . windowset -- get total number of workspaces
 myWorkspaces = ["main ", " www ", " shells ", " docs ", " kvm's ", " sessions ", " music ", " videos ", " emacs "] ++ map snd myExtraWorkspaces -- qmain workspaces
 myExtraWorkspaces = [(xK_0, " pdf "), (xK_minus, " hacking "), (xK_equal, " aws "), (xK_q, " azure "), (xK_a, " extra1 ")] -- extra workspaces
 myWorkspaceIndices = M.fromList $ zip myWorkspaces [1..] -- (,) == \x y -> (x,y)
----------------------------------------------------------------------------------------------------worskapces------------------------------------------------------------
+---------------------------------------------------------------------------------------------------worskapces---
 --note:- install xdotool for clickable workspaces
+
+---------------------------------------------------------
 -- Make xmobar workspaces clickable
 --myWorkspaces = clickable . (map xmobarEscape) $ map show [1..9]
-
-
 ------------------------------------------------------------------------
 -- Key bindings. Add, modify or remove key bindings here.
 
@@ -79,14 +79,14 @@ myKeys1 =
         , ("M-<Tab>", windows W.focusDown) -- Move focus to the next window
         , ("M-<F1>", DW.removeWorkspace) --delect a workspace
         , ("M-<F2>", DW.selectWorkspace def ) --add new workspace and goto it or goto it
-        , ("M-<F3>", DW.withWorkspace def (windows . copy)) --cpoys a workspace not the window opne on it
-        , ("M-<F4>", DW.withWorkspace def (windows . W.shift)) --moves the asact windo to a workspace
-
-
-
+        , ("M-<F3>", DW.withWorkspace def (windows . copy)) -- creates a new workspace and moves a vnc type of copy of all window present on current workspace
+        , ("M-<F4>", DW.withWorkspace def (windows . W.shift)) --moves the asact to that new worspace
+        , ("M-S-a", renameWorkspace def )
+        , ("M-C-<F9>", spawn "pavucontrol")
+        , ("M-C-<F8>", spawn "xscreensaver-command --lock")
+        
         , ("M-,", prevScreen)  -- Switch focus to prev monitor
         , ("M-.", nextScreen)  -- Switch focus to next monitor 
-
 
         , ("M-c", kill) -- close focused window
         , ("M-f", spawn "firefox") -- launch Firefox
@@ -96,13 +96,13 @@ myKeys1 =
         , ("M-l", windows W.focusDown) -- Move focus to the next window
         , ("M-m", windows W.focusMaster) -- Move focus to the master window
         , ("M-n", refresh) -- Resize viewed windows to the correct size
-        , ("M-p", spawn "dmenu_run") -- launch dmenu
+        , ("M-p", spawn "rofi -modi drun -show drun -show-icons") -- launch dmenu
         , ("M-t", withFocused $ windows . W.sink) -- Push window back into tiling
         , ("M-S-m", withLastMinimized maximizeWindow )--maximize focused window
         , ("M-C-m", withFocused minimizeWindow) --minimize focused window
 
 --        , ("M-S-a", spawn "feh --bg-scale ~/Pictures/Wallpapers/Trisquel_GNU+Linux_10.0_Etiona_spanish.png && killall xmobarbk") -- sets fake wallpaper        
-        , ("M-S-c", spawn "feh --randomize --bg-scale ~/Pictures/Wallpapers/*") -- Change wallpaperr
+        , ("M-S-c", spawn "feh --randomize --bg-fill ~/Pictures/*") -- Change wallpaperr
         , ("M-S-d", spawn "avogadro2") -- spawns chemistory digraming software
         , ("M-S-e", spawn "emacs") --spawn emacs the best editor
         , ("M-S-g", spawn "gimp") --starts gimp
@@ -114,33 +114,42 @@ myKeys1 =
         , ("M-S-r", spawn "xmonad --recompile; xmonad --restart")  -- Restart xmoand && Recompiles xmonad
         , ("M-S-t", spawn "thunderbird")
         , ("M-S-v", spawn "virt-manager") -- starts virt-manager
-
-
+        , ("M-r", spawn "screenkey") --shows keypresses on screen
+		, ("M-C-r", spawn "killall screenkey") -- quits keypresses
         , ("M-S-<F7>", spawn "digikam") -- Spawn shotwell wallpaper mangaer
-        
-
 
         , ("M-C-a", killAll) -- kill all windows on current workspace
---        , ("M-C-b", spawn "~/Projects/scripts/dmenu/brightness_controle/brightness.sh")
+        , ("M-C-b", spawn "~/work/bash/poweroff.sh")
         , ("M-C-c", spawn "qalculate-gtk")       
         , ("M-C-e", spawn "okular") --spawns okular pdf viewer
-        , ("M-C-r", spawn "cd ~/Projects/scripts/dmenu/run_scripts/ && bash run_scripts_from_dmenu.sh")
+--        , ("M-C-r", spawn "cd ~/Projects/scripts/dmenu/run_scripts/ && bash run_scripts_from_dmenu.sh")
         , ("M-C-v", spawn "vlc") -- opens vlc
         , ("M-C-x", spawn "system-config-printer")
 
+-- vloume section --
+		, ("M-S-<Page_Up>", spawn "amixer set Master 80%+" ) --uese alsamixer to 80% the output 
+        , ("M-S-<Page_Down>", spawn "amixer set Master 100%-" ) --uese alsamixer to mute output audio
+        , ("M-<Page_Up>", spawn "amixer set Master 10%+") --uese alsamixer to raise output audio
+        , ("M-<Page_Down>", spawn "amixer set Master 10%-" ) --uese alsamixer to lower output audio
+-- vloume section --
+        
+-- bightness section --
+        , ("M-C-1", spawn "xrandr --output HDMI-A-0 --brightness $(xrandr --verbose | grep -m 1 -i brightness | awk '{print ($2+0.1 > 1 ? 1 : $2+0.1)}')")
+        , ("M-C-2", spawn "xrandr --output HDMI-A-0 --brightness $(xrandr --verbose | grep -m 1 -i brightness | awk '{print ($2-0.1 < 0 ? 0 : $2-0.1)}')")
+        , ("M-C-3", spawn "xrandr --output HDMI-A-0  --brightness $(awk 'BEGIN {print ($current - 0.1 < 0 ? 0 : $current - 0.1)}' <(xrandr --verbose | grep -m 1 -i brightness | cut -f2 -d ' '))")
+		, ("M-C-4", spawn "/home/shaun/work/bash/yt-mpv/yt_mpv.sh &")
+        
+ 
+        
+--      , ("M-C-1", spawn "cd ~/Projects/bash/wallpaper_xmonad/ && bash different_wallpapers_for_each_workspace.sh")
 
-        , ("M-C-<F9>", spawn "pavucontrol")
-
-
---      , ("M-<F6>", renameWorkspace def)
 --      , ("M-S-<Space>", setLayout $ XMonad.layoutHook conf)
         ]
-
 -----------------------------------------------------------------------------
 -- old key binding method
 
 myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
- 
+     -- other shortcuts
    -- Increment the number of windows in the master area
     [((modm              , xK_comma ), sendMessage (IncMasterN 1))
 
@@ -158,7 +167,9 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     [((m .|. modm, k), windows $ f i)
         | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
         , (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
-    ++ 
+ 
+    ++
+    
     [((myModMask, key), windows $ W.greedyView ws) 
         | (key,ws) <- myExtraWorkspaces]
  
@@ -195,7 +206,6 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList
 
     -- you may also bind events to the mouse scroll wheel (button4 and button5)
     ]
-
 ------------------------------------------------------------------------
 
 
@@ -215,17 +225,26 @@ myLayout = avoidStruts $ smartBorders (tiled ||| Mirror tiled ||| Full)
 
      -- Percent of screen to increment by when resizing panes
      delta   = 3/100
-
 --------------------------------------------------------------------------
-
 
 --------------------------------------------------------------------------
 -- manages all the programas and where to send them and what to do with them
 --
 myManageHook = composeAll
-    [ className =? "MPlayer"        --> doFloat
+    [ isFullscreen --> doFullFloat
+     ,className =? "MPlayer"        --> doFloat
     , className =? "Gimp"           --> doFloat
+    , className =? "Picture-in-Picture" --> doFullFloat
     , className =? "vlc"            --> hasBorder False
+    , className =? "AudioRelay"	    --> doFloat
+    , className =? "AudioRelay"     --> hasBorder False
+
+--    , className =? "VirtualBox Manager" --> doFullFloat
+--    , className =? "VirtualBox Manager" --> hasBorder False
+--    , className =? "VirtualBox Machine" --> doFullFloat
+--    , className =? "VirtualBox Machine" --> hasBorder False
+    ,  className =?"Minecraft 1.21.5" --> doFullFloat
+    ,  className =?"Minecraft 1.21.5" --> hasBorder False
     , className =? "explorer.exe"   --> doFullFloat
     , className =? "explorer.exe"   --> hasBorder False
     , className =? "conky"         --> hasBorder False
@@ -233,16 +252,17 @@ myManageHook = composeAll
     , resource  =? "kdesktop"       --> doIgnore
     , className =? "explorer.exe"   --> doShift ( myWorkspaces !! 0 )
     , className =? "vlc"            --> doShift ( myWorkspaces !! 7 )
+    , className =? "mpv"            --> doShift ( myWorkspaces !! 7 )
 --    , className =? "okular"         --> doShift ( myWorkspaces !! 9 )
     , className =? "Virt-manager"   --> doShift ( myWorkspaces !! 4 )
     , className =? "Emacs"          --> doShift ( myWorkspaces !! 8 )
     , className =? "obs"            --> doShift ( myWorkspaces !! 2 )
     , className =? "XTerm"          --> doShift ( myWorkspaces !! 5 )
+    , stringProperty "blah blah" =? "~/Pictures/Wallpapers/FgPnCD.jpg" --> doShift "www"
 --    , className =? "Virt-manager" --> viewShift "doc"
     ]
   where doShift = doF . liftM2 (.) W.greedyView W.shift
 ------------------------------------------------------------------------
-
 
 -------------------------------------------------------------------------------------------------------------
 -- Startup hook
@@ -252,27 +272,45 @@ myManageHook = composeAll
 -- per-workspace layout choices.
 --
 -- By default, do nothing.
+--myStartupHook = do
+--			spawnOnce "feh --bg-fill  ~/Pictures/logo.jpeg &"
+--            spawnOnce "~/Projects/scripts/dmenu/wallpaper_setter/feh.sh &"
+
+--            spawnOnce "picom &"
+--            spawnOnce "ibus-daemon -d &"
+--            spawnOnce "dunst &"
+--            spawnOnce "amixer sset Master 40% &"
+--            spawnOnce "~/.config/xmonad/scripts/sound.shi &"
+--            spawnOnce "xscreensaver -nosplash &"
+--            spawnOnce "conky &"
+
+
+--			spawnOnce "killall xmobarbk"
+--            spawnOnce "~/Projects/bash/wallpaper_xmonad/different_wallpapers_for_each_workspace.sh"
+--			spawnOnce "lxappearance &"
+--            spawnOnce "sleep 2s; killall lxappearance &"
+--            spawnOnce "rclone mount --daemon gdrive3: /home/shaun/online_drives/google/gdrive3/ &"
+--            spawnOnce "rclone mount --daemon gdrive1: /home/shaun/online_drives/google/gdrive1/ &"
+--            spawnOnce "rclone mount --daemon gdrive2: /home/shaun/online_drives/google/gdrive2/ &"
+
+
 myStartupHook = do
-            spawnOnce "~/Projects/scripts/dmenu/wallpaper_setter/feh.sh &"
-            spawnOnce "picom &"
-            spawnOnce "ibus-daemon -d &"
+--            spawnOnce ""
+            spawnOnce "feh --bg-fill /home/shaun/Pictures/logo.jpeg &"
+            spawnOnce "fcitx5 -d &"
             spawnOnce "dunst &"
-            spawnOnce "mpv -no-video ~/Music/bootsound/boot-sound.wav &"
+
 -------------------------------------------------------------------------------------------------------------
-
-
-
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 main = do
-
 --------------------------------------- xmobar------------------------------------------
---    xmpeoc0 <- spawnPipe "$HOME/.local/bin/xmobarbk -x 0 $HOME/.config/xmobar/xmobarrc1"
+--    xmpeoc0 <- spawnPipe "$HOME/.config/xmobar/xmobarbk -x 0 $HOME/.config/xmobar/xmobarrc1"
     xmpeoc0 <- spawnPipe "xmobar -x 0 ~/.config/xmobar/xmobarrc"
---  xmpeoc1 <- spawnPipe "xmobar -x 1 $HOME/.config/xmobar/xmobarrc1"
---------------------------------------- xmobar-------------------------------------------
+--    xmpeoc1 <- spawnPipe "$HOME/.local/bin/xmobarbk -x 1 $HOME/.config/xmobar/xmobarrc1"
 
-    xmonad $ ewmhFullscreen . ewmh $ docks defaults {logHook = clickablePP xmobarPP { ppOutput = hPutStrLn xmpeoc0  -- >> hPutStrLn xmpeoc1 x
+--------------------------------------- xmobar-------------------------------------------
+    xmonad $ workspaceNamesEwmh . ewmh $ ewmhFullscreen . ewmh $ docks $ defaults {logHook = clickablePP xmobarPP
+                                                    { ppOutput = hPutStrLn xmpeoc0 -- >> hPutStrLn xmpeoc1 
                                                      , ppCurrent = xmobarColor "#944dff" "" .  wrap "[" "]"         -- Current workspace
                                                      , ppVisible = xmobarColor "#3399ff" ""   
                                                      , ppHidden = xmobarColor "#FF1493" "" .  wrap "*" ""
@@ -283,10 +321,8 @@ main = do
                                                      , ppExtras  = [windowCount]                                     -- numbers of windows current workspace
                                                      , ppOrder  = \(ws:l:t:ex) -> [ws,l]++ex++[t]                    -- order of things in xmobar
                                                      } >>= dynamicLogWithPP}
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------						    
-
-
------------------------------------------------------------------
+                                                     	
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------						  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 defaults = def {
       -- simple stuff
         terminal           = myTerminal,
@@ -297,7 +333,7 @@ defaults = def {
         workspaces         = myWorkspaces,
         normalBorderColor  = myNormalBorderColor,
         focusedBorderColor = myFocusedBorderColor,
-
+	
       -- key bindings
         keys               = myKeys,
         mouseBindings      = myMouseBindings,
@@ -307,6 +343,7 @@ defaults = def {
         manageHook         = myManageHook,
 --        handleEventHook    = fullscreenEventHook,
        -- logHook            = myLogHook,
-        startupHook        = myStartupHook >> setWMName "xmonad on Arch Gnu/Linux"
+        startupHook        = myStartupHook >> setWMName "xmonad on Arch Gnu/Linux" >> setDefaultCursor xC_left_ptr
+
     }`additionalKeysP` myKeys1
------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
