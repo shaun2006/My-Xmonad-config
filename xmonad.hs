@@ -9,6 +9,7 @@ import XMonad.Layout.Spiral
 import XMonad.Layout.ThreeColumns
 import XMonad.Layout.Grid
 import XMonad.Layout.MultiColumns
+import XMonad.Layout.CircleEx
 import XMonad.Util.Run
 import qualified XMonad.StackSet as W
 import qualified Data.Map as M
@@ -40,6 +41,7 @@ import qualified XMonad.Layout.BoringWindows as BW
 import Graphics.X11.ExtraTypes.XF86
 import XMonad.Util.Cursor
 import XMonad.Config.Gnome
+import XMonad.Actions.EasyMotion (selectWindow, EasyMotionConfig(..), textSize)
 ---------------------------------------------------imports--------------------------------------------------
 ---------------------------------------------------setup up stuff--------------------------------------------------
 myTerminal = "kitty"
@@ -63,14 +65,25 @@ windowCount = gets $ Just . show . length . W.integrate' . W.stack . W.workspace
 myWorkspaces = ["main ", " www ", " shells ", " docs ", " kvm's ", " sessions ", " music ", " videos ", " emacs "] ++ map snd myExtraWorkspaces -- qmain workspaces
 myExtraWorkspaces = [(xK_0, " pdf "), (xK_minus, " hacking "), (xK_equal, " aws "), (xK_q, " azure "), (xK_a, " extra1 ")] -- extra workspaces
 myWorkspaceIndices = M.fromList $ zip myWorkspaces [1..] -- (,) == \x y -> (x,y)
+shiftAndView :: WorkspaceId -> X ()
+shiftAndView ws = windows (W.shift ws) >> windows (W.greedyView ws)
 ---------------------------------------------------------------------------------------------------worskapces---
 --note:- install xdotool for clickable workspaces
+
+--------------------------------------
+--makes cicle workspace
+myCircle = circleEx {cDelta = -3*pi/4}
 
 ---------------------------------------------------------
 -- Make xmobar workspaces clickable
 --myWorkspaces = clickable . (map xmobarEscape) $ map show [1..9]
 ------------------------------------------------------------------------
 -- Key bindings. Add, modify or remove key bindings here.
+
+---------------------------------------------------------
+-- Xmonad EasyMotions
+
+
 
 myKeys1 = 
         [ ("M-<Return>", spawn myTerminal) -- launch a terminal
@@ -96,15 +109,13 @@ myKeys1 =
         , ("M-l", windows W.focusDown) -- Move focus to the next window
         , ("M-m", windows W.focusMaster) -- Move focus to the master window
         , ("M-n", refresh) -- Resize viewed windows to the correct size
-        , ("M-p", spawn "rofi -modi drun -show drun -show-icons") -- launch dmenu
+        , ("M-p", spawn "rofi -modi drun -show drun -show-icons") -- launch rofi
         , ("M-t", withFocused $ windows . W.sink) -- Push window back into tiling
         , ("M-S-m", withLastMinimized maximizeWindow )--maximize focused window
         , ("M-C-m", withFocused minimizeWindow) --minimize focused window
 
---        , ("M-S-a", spawn "feh --bg-scale ~/Pictures/Wallpapers/Trisquel_GNU+Linux_10.0_Etiona_spanish.png && killall xmobarbk") -- sets fake wallpaper        
-        , ("M-S-c", spawn "feh --randomize --bg-fill ~/Pictures/*") -- Change wallpaperr
-        , ("M-S-d", spawn "avogadro2") -- spawns chemistory digraming software
-        , ("M-S-e", spawn "emacs") --spawn emacs the best editor
+        , ("M-S-c", spawn "feh --randomize --bg-fill ~/Pictures/*") -- Change wallpaperr randomly
+        , ("M-S-e", spawn "emacs") --spawn emacs the best editor replace it with vim or nvim, whatever is your fav ide
         , ("M-S-g", spawn "gimp") --starts gimp
         , ("M-S-j", windows W.swapDown) -- Swap the focused window with the next window
         , ("M-S-k", windows W.swapUp)  -- Swap the focused window with the previous window
@@ -119,10 +130,8 @@ myKeys1 =
         , ("M-S-<F7>", spawn "digikam") -- Spawn shotwell wallpaper mangaer
 
         , ("M-C-a", killAll) -- kill all windows on current workspace
-        , ("M-C-b", spawn "~/work/bash/poweroff.sh")
         , ("M-C-c", spawn "qalculate-gtk")       
         , ("M-C-e", spawn "okular") --spawns okular pdf viewer
---        , ("M-C-r", spawn "cd ~/Projects/scripts/dmenu/run_scripts/ && bash run_scripts_from_dmenu.sh")
         , ("M-C-v", spawn "vlc") -- opens vlc
         , ("M-C-x", spawn "system-config-printer")
 
@@ -137,13 +146,11 @@ myKeys1 =
         , ("M-C-1", spawn "xrandr --output HDMI-A-0 --brightness $(xrandr --verbose | grep -m 1 -i brightness | awk '{print ($2+0.1 > 1 ? 1 : $2+0.1)}')")
         , ("M-C-2", spawn "xrandr --output HDMI-A-0 --brightness $(xrandr --verbose | grep -m 1 -i brightness | awk '{print ($2-0.1 < 0 ? 0 : $2-0.1)}')")
         , ("M-C-3", spawn "xrandr --output HDMI-A-0  --brightness $(awk 'BEGIN {print ($current - 0.1 < 0 ? 0 : $current - 0.1)}' <(xrandr --verbose | grep -m 1 -i brightness | cut -f2 -d ' '))")
-		, ("M-C-4", spawn "/home/shaun/work/bash/yt-mpv/yt_mpv.sh &")
-        
- 
-        
---      , ("M-C-1", spawn "cd ~/Projects/bash/wallpaper_xmonad/ && bash different_wallpapers_for_each_workspace.sh")
-
---      , ("M-S-<Space>", setLayout $ XMonad.layoutHook conf)
+      
+        , ("M-s", selectWindow def{txtCol="Green",bgCol="gray", cancelKey=xK_Escape, emFont="xft: Sans-20", overlayF=textSize} >>= (`whenJust` windows . W.focusWindow))
+        , ("M-x", selectWindow def{txtCol="Red",bgCol="gray", cancelKey=xK_Escape, emFont="xft: Sans-20", overlayF=textSize} >>= (`whenJust` killWindow))
+        , ("M-z", spawn "redshift -O 4500k -r -P")
+        , ("M-C-z", spawn "redshift -O 6500K -r -P")
         ]
 -----------------------------------------------------------------------------
 -- old key binding method
@@ -178,6 +185,10 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
         | (key,ws) <- myExtraWorkspaces]
 
     ++
+    [ ((myModMask .|. shiftMask .|. controlMask, k), shiftAndView i)
+    | (i, k) <- zip (workspaces conf) [xK_1 .. xK_9]
+	]
+	++
     --
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
     -- mod-shift-{w,e,r}, Move client to screen 1, 2, or 3
@@ -211,7 +222,7 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList
 
 ------------------------------------------------------------------------
 -- Layouts:
-myLayout = avoidStruts $ smartBorders (tiled ||| Mirror tiled ||| Full)
+myLayout = avoidStruts $ smartBorders (tiled ||| Mirror tiled ||| Full ||| spiral (6/7) ||| Grid ||| ThreeCol 1 (3/100) (1/2) ||| myCircle)
   where
      -- default tiling algorithm partitions the screen into two panes
      -- tiled   = Tall nmaster delta ratio
@@ -238,11 +249,6 @@ myManageHook = composeAll
     , className =? "vlc"            --> hasBorder False
     , className =? "AudioRelay"	    --> doFloat
     , className =? "AudioRelay"     --> hasBorder False
-
---    , className =? "VirtualBox Manager" --> doFullFloat
---    , className =? "VirtualBox Manager" --> hasBorder False
---    , className =? "VirtualBox Machine" --> doFullFloat
---    , className =? "VirtualBox Machine" --> hasBorder False
     ,  className =?"Minecraft 1.21.5" --> doFullFloat
     ,  className =?"Minecraft 1.21.5" --> hasBorder False
     , className =? "explorer.exe"   --> doFullFloat
@@ -253,60 +259,28 @@ myManageHook = composeAll
     , className =? "explorer.exe"   --> doShift ( myWorkspaces !! 0 )
     , className =? "vlc"            --> doShift ( myWorkspaces !! 7 )
     , className =? "mpv"            --> doShift ( myWorkspaces !! 7 )
---    , className =? "okular"         --> doShift ( myWorkspaces !! 9 )
     , className =? "Virt-manager"   --> doShift ( myWorkspaces !! 4 )
     , className =? "Emacs"          --> doShift ( myWorkspaces !! 8 )
     , className =? "obs"            --> doShift ( myWorkspaces !! 2 )
     , className =? "XTerm"          --> doShift ( myWorkspaces !! 5 )
-    , stringProperty "blah blah" =? "~/Pictures/Wallpapers/FgPnCD.jpg" --> doShift "www"
---    , className =? "Virt-manager" --> viewShift "doc"
     ]
   where doShift = doF . liftM2 (.) W.greedyView W.shift
 ------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------------------------------
 -- Startup hook
-
--- Perform an arbitrary action each time xmonad starts or is restarted
--- with mod-q.  Used by, e.g., XMonad.Layout.PerWorkspace to initialize
--- per-workspace layout choices.
---
--- By default, do nothing.
---myStartupHook = do
---			spawnOnce "feh --bg-fill  ~/Pictures/logo.jpeg &"
---            spawnOnce "~/Projects/scripts/dmenu/wallpaper_setter/feh.sh &"
-
---            spawnOnce "picom &"
---            spawnOnce "ibus-daemon -d &"
---            spawnOnce "dunst &"
---            spawnOnce "amixer sset Master 40% &"
---            spawnOnce "~/.config/xmonad/scripts/sound.shi &"
---            spawnOnce "xscreensaver -nosplash &"
---            spawnOnce "conky &"
-
-
---			spawnOnce "killall xmobarbk"
---            spawnOnce "~/Projects/bash/wallpaper_xmonad/different_wallpapers_for_each_workspace.sh"
---			spawnOnce "lxappearance &"
---            spawnOnce "sleep 2s; killall lxappearance &"
---            spawnOnce "rclone mount --daemon gdrive3: /home/shaun/online_drives/google/gdrive3/ &"
---            spawnOnce "rclone mount --daemon gdrive1: /home/shaun/online_drives/google/gdrive1/ &"
---            spawnOnce "rclone mount --daemon gdrive2: /home/shaun/online_drives/google/gdrive2/ &"
-
-
 myStartupHook = do
---            spawnOnce ""
-            spawnOnce "feh --bg-fill /home/shaun/Pictures/logo.jpeg &"
-            spawnOnce "fcitx5 -d &"
-            spawnOnce "dunst &"
+            spawnOnce "feh --bg-fill ~/Pictures/winxp.jpeg &"
+--            spawnOnce "fcitx5 -d &" -- used for multiple keyboard inputs
+            spawnOnce "dunst &" -- notification 
 
 -------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 main = do
 --------------------------------------- xmobar------------------------------------------
---    xmpeoc0 <- spawnPipe "$HOME/.config/xmobar/xmobarbk -x 0 $HOME/.config/xmobar/xmobarrc1"
+
     xmpeoc0 <- spawnPipe "xmobar -x 0 ~/.config/xmobar/xmobarrc"
---    xmpeoc1 <- spawnPipe "$HOME/.local/bin/xmobarbk -x 1 $HOME/.config/xmobar/xmobarrc1"
+--    xmpeoc1 <- spawnPipe "$HOME/.local/bin/xmobarbk -x 1 $HOME/.config/xmobar/xmobarrc1" for multimonitors
 
 --------------------------------------- xmobar-------------------------------------------
     xmonad $ workspaceNamesEwmh . ewmh $ ewmhFullscreen . ewmh $ docks $ defaults {logHook = clickablePP xmobarPP
