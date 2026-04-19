@@ -6,7 +6,7 @@ This is my xmonad config.
 
 copy the bellow code if you have alreday installed a base arch linux system configured with a desktop envirnoment eg(gnome,kde,xfce)
 ``` bash
-sudo pacman -S xmonad xmonad-contrib rofi kitty xdotool
+sudo pacman -S xmonad xmobar xmonad-contrib rofi kitty xdotool
 git clone https://github.com/shaun2006/My-Xmonad-config.git
 cd My-Xmonad-config
 mkdir -p ~/.config/xmonad ~/.config/xmobar ~/Pictures/
