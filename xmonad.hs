@@ -96,7 +96,6 @@ myKeys1 =
         , ("M-<F4>", DW.withWorkspace def (windows . W.shift)) --moves the asact to that new worspace
         , ("M-S-a", renameWorkspace def )
         , ("M-C-<F9>", spawn "pavucontrol")
-        , ("M-C-<F8>", spawn "xscreensaver-command --lock")
         
         , ("M-,", prevScreen)  -- Switch focus to prev monitor
         , ("M-.", nextScreen)  -- Switch focus to next monitor 
@@ -124,10 +123,8 @@ myKeys1 =
         , ("M-S-q", io exitSuccess) -- Quit xmonad
         , ("M-S-r", spawn "xmonad --recompile; xmonad --restart")  -- Restart xmoand && Recompiles xmonad
         , ("M-S-t", spawn "thunderbird")
-        , ("M-S-v", spawn "virt-manager") -- starts virt-manager
         , ("M-r", spawn "screenkey") --shows keypresses on screen
 		, ("M-C-r", spawn "killall screenkey") -- quits keypresses
-        , ("M-S-<F7>", spawn "digikam") -- Spawn shotwell wallpaper mangaer
 
         , ("M-C-a", killAll) -- kill all windows on current workspace
         , ("M-C-c", spawn "qalculate-gtk")       
@@ -247,22 +244,9 @@ myManageHook = composeAll
     , className =? "Gimp"           --> doFloat
     , className =? "Picture-in-Picture" --> doFullFloat
     , className =? "vlc"            --> hasBorder False
-    , className =? "AudioRelay"	    --> doFloat
-    , className =? "AudioRelay"     --> hasBorder False
-    ,  className =?"Minecraft 1.21.5" --> doFullFloat
-    ,  className =?"Minecraft 1.21.5" --> hasBorder False
-    , className =? "explorer.exe"   --> doFullFloat
-    , className =? "explorer.exe"   --> hasBorder False
-    , className =? "conky"         --> hasBorder False
-    , resource  =? "desktop_window" --> doIgnore
-    , resource  =? "kdesktop"       --> doIgnore
-    , className =? "explorer.exe"   --> doShift ( myWorkspaces !! 0 )
     , className =? "vlc"            --> doShift ( myWorkspaces !! 7 )
     , className =? "mpv"            --> doShift ( myWorkspaces !! 7 )
-    , className =? "Virt-manager"   --> doShift ( myWorkspaces !! 4 )
     , className =? "Emacs"          --> doShift ( myWorkspaces !! 8 )
-    , className =? "obs"            --> doShift ( myWorkspaces !! 2 )
-    , className =? "XTerm"          --> doShift ( myWorkspaces !! 5 )
     ]
   where doShift = doF . liftM2 (.) W.greedyView W.shift
 ------------------------------------------------------------------------
