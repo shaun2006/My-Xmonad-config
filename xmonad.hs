@@ -42,6 +42,7 @@ import Graphics.X11.ExtraTypes.XF86
 import XMonad.Util.Cursor
 import XMonad.Config.Gnome
 import XMonad.Actions.EasyMotion (selectWindow, EasyMotionConfig(..), textSize)
+import XMonad.Layout.Magnifier
 ---------------------------------------------------imports--------------------------------------------------
 ---------------------------------------------------setup up stuff--------------------------------------------------
 myTerminal = "kitty"
@@ -124,8 +125,7 @@ myKeys1 =
         , ("M-S-r", spawn "xmonad --recompile; xmonad --restart")  -- Restart xmoand && Recompiles xmonad
         , ("M-S-t", spawn "thunderbird")
         , ("M-r", spawn "screenkey") --shows keypresses on screen
-		, ("M-C-r", spawn "killall screenkey") -- quits keypresses
-
+	, ("M-C-r", spawn "killall screenkey") -- quits keypresses
         , ("M-C-a", killAll) -- kill all windows on current workspace
         , ("M-C-c", spawn "qalculate-gtk")       
         , ("M-C-e", spawn "okular") --spawns okular pdf viewer
@@ -133,7 +133,7 @@ myKeys1 =
         , ("M-C-x", spawn "system-config-printer")
 
 -- vloume section --
-		, ("M-S-<Page_Up>", spawn "amixer set Master 80%+" ) --uese alsamixer to 80% the output 
+        , ("M-S-<Page_Up>", spawn "amixer set Master 80%+" ) --uese alsamixer to 80% the output 
         , ("M-S-<Page_Down>", spawn "amixer set Master 100%-" ) --uese alsamixer to mute output audio
         , ("M-<Page_Up>", spawn "amixer set Master 10%+") --uese alsamixer to raise output audio
         , ("M-<Page_Down>", spawn "amixer set Master 10%-" ) --uese alsamixer to lower output audio
@@ -148,6 +148,13 @@ myKeys1 =
         , ("M-x", selectWindow def{txtCol="Red",bgCol="gray", cancelKey=xK_Escape, emFont="xft: Sans-20", overlayF=textSize} >>= (`whenJust` killWindow))
         , ("M-z", spawn "redshift -O 4500k -r -P")
         , ("M-C-z", spawn "redshift -O 6500K -r -P")
+
+        -- magnifier section --
+        , ("M-S-f", sendMessage ToggleOff)
+        , ("M-C-f", sendMessage ToggleOn)
+        , ("M-C-w", sendMessage MagnifyMore)
+        , ("M-C-s", sendMessage MagnifyLess)
+
         ]
 -----------------------------------------------------------------------------
 -- old key binding method
@@ -219,7 +226,7 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList
 
 ------------------------------------------------------------------------
 -- Layouts:
-myLayout = avoidStruts $ smartBorders (tiled ||| Mirror tiled ||| Full ||| spiral (6/7) ||| Grid ||| ThreeCol 1 (3/100) (1/2) ||| myCircle)
+myLayout = avoidStruts $ smartBorders $ magnifierOff (tiled ||| Mirror tiled ||| Full ||| spiral (6/7) ||| Grid ||| ThreeCol 1 (3/100) (1/2) ||| myCircle)
   where
      -- default tiling algorithm partitions the screen into two panes
      -- tiled   = Tall nmaster delta ratio
